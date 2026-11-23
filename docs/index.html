@@ -5,30 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TeamAcademy Certificate Verification</title>
   <style>
-    body{font-family:sans-serif;max-width:520px;margin:40px auto;padding:0 16px}
+    body{font-family:sans-serif;max-width:900px;margin:40px auto;padding:0 16px}
     input,button{padding:10px;font-size:16px}
     .ok{background:#e6f7ea;border:1px solid #2e9e4f;padding:16px;border-radius:8px;margin-top:20px}
     .bad{background:#fdeaea;border:1px solid #c0392b;padding:16px;border-radius:8px;margin-top:20px}
+    img{max-width:100%;margin-top:16px;border:1px solid #ccc;border-radius:8px}
   </style>
 </head>
 <body>
   <h2>TeamAcademy Certificate Verification</h2>
-  <input id="cid" placeholder="e.g. TA-2026-WEB101-0001" size="28">
+  <input id="cid" placeholder="e.g. TA-2026-MSO-0001" size="28">
   <button onclick="verify()">Verify</button>
   <div id="result"></div>
 
 <script>
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
 async function verify() {
   const id = document.getElementById('cid').value.trim().toUpperCase();
   const out = document.getElementById('result');
   try {
-    const res = await fetch('data/certificates.json');
+    const res = await fetch('data/certificates.json?t=' + Date.now());
     const list = await res.json();
     const c = list.find(x => x.id === id);
     out.innerHTML = c
       ? `<div class="ok"><b>✔ Valid certificate</b><br>
-         Name: ${c.student}<br>Course: ${c.course}<br>
-         Issued: ${c.issued}<br>ID: ${c.id}</div>`
+         Name: ${esc(c.student)}<br>Course: ${esc(c.course)}<br>
+         Issued: ${esc(c.issued)}<br>ID: ${esc(c.id)}</div>
+         <img src="img/${esc(c.id)}.jpg" alt="Certificate">
+         <p><a href="pdf/${esc(c.id)}.pdf" target="_blank">⬇ Download certificate (PDF)</a></p>`
       : `<div class="bad"><b>✘ Not found.</b> This ID is not in our records.</div>`;
   } catch (e) {
     out.innerHTML = '<div class="bad">Could not load records.</div>';
