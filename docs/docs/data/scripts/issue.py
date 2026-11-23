@@ -3,83 +3,105 @@ from pathlib import Path
 from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 BASE_URL = "https://profswatraj-stack.github.io/teamacademy-certificates/"
 
-# ---------- LAYOUT SETTINGS (edit these to fit your template) ----------
-# x and y are fractions of the page: x from the left (0 to 1), y from the top (0 to 1)
+# ---------- LAYOUT (fractions of the page: x from left, y from top) ----------
+# For text, y is the baseline of the text.
 FIELDS = {
-    "name":   dict(x=0.50, y=0.48, size=36, font="Helvetica-Bold", align="center", color=(0, 0, 0)),
-    "course": dict(x=0.50, y=0.64, size=24, font="Helvetica-Bold", align="center", color=(0, 0, 0)),
-    "date":   dict(x=0.15, y=0.88, size=14, font="Helvetica",      align="left",   color=(0, 0, 0)),
-    "id":     dict(x=0.15, y=0.93, size=11, font="Helvetica",      align="left",   color=(0.3, 0.3, 0.3)),
+    "name":    dict(x=0.106, y=0.339, size=26, font="Times-Bold",  align="left"),
+    "date":    dict(x=0.108, y=0.654, size=16, font="Times-Roman", align="left"),
+    "cert_no": dict(x=0.889, y=0.665, size=16, font="Times-Roman", align="right"),
 }
-QR_X, QR_Y, QR_SIZE = 0.80, 0.74, 90   # top-left corner of QR (fractions), size in points
-# -----------------------------------------------------------------------
+NAME_MAX_WIDTH = 0.55          # name shrinks automatically if longer than this share of the page
+
+# White boxes that hide the printed placeholders: (x, top, width, height)
+COVERS = [
+    (0.100, 0.300, 0.555, 0.052),   # "Name"
+    (0.1045, 0.630, 0.240, 0.040),  # "Awarded on September 2025"
+    (0.645, 0.636, 0.253, 0.040),   # "Certificate No: 33696"
+]
+
+# QR code: top-left corner (fractions) and size in points
+QR_X, QR_Y, QR_SIZE = 0.78, 0.45, 85
+LABEL = dict(x=0.83, y=0.60, size=8, text="Scan to verify")
+# -----------------------------------------------------------------------------
 
 REG = Path("docs/data/certificates.json")
 PDF_DIR = Path("docs/pdf"); PDF_DIR.mkdir(parents=True, exist_ok=True)
 
-template = next(Path(".").glob("certificate.*"), None)
-if template is None:
-    raise SystemExit("No template found. Upload certificate.png, .jpg or .pdf to the main folder.")
-is_pdf = template.suffix.lower() == ".pdf"
+def find_template(code):
+    # first look for templates/<COURSE_CODE>.jpg, then certificate.jpg in the main folder
+    for folder, stem in (("templates", code), (".", "certificate")):
+        for ext in (".jpg", ".jpeg", ".png"):
+            p = Path(folder) / (stem + ext)
+            if p.exists():
+                return p
+    return None
 
-if is_pdf:
-    from pypdf import PdfReader, PdfWriter
-    box = PdfReader(str(template)).pages[0].mediabox
-    W, H = float(box.width), float(box.height)
-else:
-    iw, ih = Image.open(template).size
+def build(row, cid, issued_date, tpl):
+    iw, ih = Image.open(tpl).size
     W = 842.0
     H = W * ih / iw
-
-def build(row, cid, issued):
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=(W, H))
-    if not is_pdf:
-        c.drawImage(str(template), 0, 0, W, H)
+    c.drawImage(str(tpl), 0, 0, W, H)
 
-    def put(key, s):
+    # hide the printed placeholders
+    c.setFillColorRGB(1, 1, 1)
+    for fx, ft, fw, fh in COVERS:
+        c.rect(W * fx, H * (1 - ft - fh), W * fw, H * fh, stroke=0, fill=1)
+
+    c.setFillColorRGB(0, 0, 0)
+
+    def put(key, text):
         f = FIELDS[key]
-        c.setFont(f["font"], f["size"]); c.setFillColorRGB(*f["color"])
+        size = f["size"]
+        if key == "name":
+            while stringWidth(text, f["font"], size) > W * NAME_MAX_WIDTH and size > 12:
+                size -= 1
+        c.setFont(f["font"], size)
         x, y = W * f["x"], H * (1 - f["y"])
-        (c.drawCentredString if f["align"] == "center" else c.drawString)(x, y, s)
+        if f["align"] == "right":
+            c.drawRightString(x, y, text)
+        else:
+            c.drawString(x, y, text)
 
     put("name", row["student"])
-    put("course", row["course_name"])
-    put("date", f"Date: {issued}")
-    put("id", f"ID: {cid}")
+    put("date", "Awarded on " + issued_date.strftime("%B %Y"))
+    put("cert_no", "Certificate No: " + cid)
 
+    # QR code
     qbuf = io.BytesIO()
     qrcode.make(f"{BASE_URL}?id={cid}").save(qbuf); qbuf.seek(0)
     c.drawImage(ImageReader(qbuf), W * QR_X, H * (1 - QR_Y) - QR_SIZE, QR_SIZE, QR_SIZE)
-    c.showPage(); c.save()
-    buf.seek(0)
+    c.setFont("Helvetica", LABEL["size"])
+    c.drawCentredString(W * LABEL["x"], H * (1 - LABEL["y"]), LABEL["text"])
 
-    if not is_pdf:
-        return buf.getvalue()
-    page = PdfReader(str(template)).pages[0]
-    page.merge_page(PdfReader(buf).pages[0])
-    out = io.BytesIO(); w = PdfWriter(); w.add_page(page); w.write(out)
-    return out.getvalue()
+    c.showPage(); c.save()
+    return buf.getvalue()
 
 registry = json.loads(REG.read_text()) if REG.exists() else []
-year = datetime.date.today().year
-issued = str(datetime.date.today())
+today = datetime.date.today()
+year = today.year
 
 for row in csv.DictReader(open("input/completions.csv", encoding="utf-8")):
     if not row.get("student"):
         continue
     if any(r["student"] == row["student"] and r["course"] == row["course_name"] for r in registry):
         continue
+    tpl = find_template(row["course_code"])
+    if tpl is None:
+        print("SKIPPED (no template):", row["student"], row["course_code"])
+        continue
     n = sum(1 for r in registry if f"-{row['course_code']}-" in r["id"]) + 1
     cid = f"TA-{year}-{row['course_code']}-{n:04d}"
-    data = build(row, cid, issued)
+    data = build(row, cid, today, tpl)
     (PDF_DIR / f"{cid}.pdf").write_bytes(data)
     registry.append({
         "id": cid, "student": row["student"], "course": row["course_name"],
-        "issued": issued, "sha256": hashlib.sha256(data).hexdigest()
+        "issued": str(today), "sha256": hashlib.sha256(data).hexdigest()
     })
     print("Issued", cid)
 
