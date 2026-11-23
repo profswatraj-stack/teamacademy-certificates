@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "TA-2026-MSO-0001",
+    "student": "Test Student",
+    "course": "Certified Professional in Microsoft Office: Word, Excel, PowerPoint",
+    "issued": "2026-11-23",
+    "sha256": "bdd1cb7c5a4ac4b1755c079fb4472f0954c998f279a27fca602b8df5fbb63ce7"
+  }
+]
