@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TeamAcademy Certificate Verification</title>
+  <style>
+    body{font-family:sans-serif;max-width:520px;margin:40px auto;padding:0 16px}
+    input,button{padding:10px;font-size:16px}
+    .ok{background:#e6f7ea;border:1px solid #2e9e4f;padding:16px;border-radius:8px;margin-top:20px}
+    .bad{background:#fdeaea;border:1px solid #c0392b;padding:16px;border-radius:8px;margin-top:20px}
+  </style>
+</head>
+<body>
+  <h2>TeamAcademy Certificate Verification</h2>
+  <input id="cid" placeholder="e.g. TA-2026-WEB101-0001" size="28">
+  <button onclick="verify()">Verify</button>
+  <div id="result"></div>
+
+<script>
+async function verify() {
+  const id = document.getElementById('cid').value.trim().toUpperCase();
+  const out = document.getElementById('result');
+  try {
+    const res = await fetch('data/certificates.json');
+    const list = await res.json();
+    const c = list.find(x => x.id === id);
+    out.innerHTML = c
+      ? `<div class="ok"><b>✔ Valid certificate</b><br>
+         Name: ${c.student}<br>Course: ${c.course}<br>
+         Issued: ${c.issued}<br>ID: ${c.id}</div>`
+      : `<div class="bad"><b>✘ Not found.</b> This ID is not in our records.</div>`;
+  } catch (e) {
+    out.innerHTML = '<div class="bad">Could not load records.</div>';
+  }
+}
+const q = new URLSearchParams(location.search).get('id');
+if (q) { document.getElementById('cid').value = q; verify(); }
+</script>
+</body>
+</html>
