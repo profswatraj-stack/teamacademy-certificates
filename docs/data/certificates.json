@@ -4,10 +4,21 @@
     "student": "Test Student",
     "course": "Certified Professional in Microsoft Office: Word, Excel, PowerPoint",
     "issued": "2026-11-23",
-    "sha256": "37c84dc75e0991fc8622cc81bee0c804aac6c868a871b255bddbda3261092ffa",
+    "sha256": "2a99f4e9f06fa4ab704f0dcecb400422c0c8c63f167c3f250695adeebdd2f141",
     "course_code": "MSO",
     "completed": "2026-11-23",
     "credential_url": "https://profswatraj-stack.github.io/teamacademy-certificates/?id=TA-2026-MSO-0001",
     "status": "active"
+  },
+  {
+    "id": "TA-2026-AIF-0001",
+    "student": "Test Student 02",
+    "course": "Agentic AI for Financial Process Automation",
+    "course_code": "AIF",
+    "completed": "2026-11-27",
+    "issued": "2026-11-27",
+    "credential_url": "https://profswatraj-stack.github.io/teamacademy-certificates/?id=TA-2026-AIF-0001",
+    "status": "active",
+    "sha256": "ee7f959fcae987c50c4ced09ba52f5d9e32bd1eb4a03232049ed60b9fa6256e1"
   }
 ]
