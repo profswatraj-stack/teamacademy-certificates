@@ -4,7 +4,7 @@
     "student": "Test Student",
     "course": "Certified Professional in Microsoft Office: Word, Excel, PowerPoint",
     "issued": "2026-11-23",
-    "sha256": "2a99f4e9f06fa4ab704f0dcecb400422c0c8c63f167c3f250695adeebdd2f141",
+    "sha256": "196d5c7852d04d373da84ff7005442c00eb6113e46e855ab03f746dc130409d2",
     "course_code": "MSO",
     "completed": "2026-11-23",
     "credential_url": "https://profswatraj-stack.github.io/teamacademy-certificates/?id=TA-2026-MSO-0001",
@@ -19,6 +19,6 @@
     "issued": "2026-11-27",
     "credential_url": "https://profswatraj-stack.github.io/teamacademy-certificates/?id=TA-2026-AIF-0001",
     "status": "active",
-    "sha256": "ee7f959fcae987c50c4ced09ba52f5d9e32bd1eb4a03232049ed60b9fa6256e1"
+    "sha256": "98a448421dda1b8315c078ac7e425d18787fd6e8f69e6050d1ba96bfda2eb114"
   }
 ]
