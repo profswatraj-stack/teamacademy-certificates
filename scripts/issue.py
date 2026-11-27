@@ -25,7 +25,7 @@ DATE_FORMAT = "%d %B %Y"
 
 # Canonical codes used in certificate IDs. Keep these stable after issuing.
 COURSE_CODES = {
-    "AIF": "AIF", "MSO": "MSO", "PYTHON": "PYTHON",
+    "AI": "AI", "MSO": "MSO", "PYTHON": "PYTHON",
     "DA": "DA", "DATA ANALYTICS": "DA",
     "GENAI": "GENAI", "GENERATIVE AI": "GENAI",
 }
@@ -111,7 +111,7 @@ def parse_completion_date(value, existing=None):
 def normalize_code(value):
     key = (value or "").strip().upper()
     if key not in COURSE_CODES:
-        allowed = "AIF, MSO, PYTHON, DA (Data Analytics), GENAI (Generative AI)"
+        allowed = "AI, MSO, PYTHON, DA (Data Analytics), GENAI (Generative AI)"
         raise ValueError(f"Unsupported course_code {value!r}. Use one of: {allowed}.")
     return COURSE_CODES[key]
 
