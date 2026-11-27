@@ -1,5 +1,4 @@
 student,course_code,course_name,completion_date,approved_by
 Test Student,MSO,"Certified Professional in Microsoft Office: Word, Excel, PowerPoint",2026-11-23,LEGACY
 
-student,course_code,course_name,completion_date,approved_by
 Test Student 02,AIF,"Agentic AI for Financial Process Automation",2026-11-27,TA-MEMBER-01
