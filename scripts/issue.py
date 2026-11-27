@@ -54,7 +54,7 @@ QR_X, QR_Y, QR_SIZE = 0.78, 0.45, 85
 LABEL = dict(x=0.83, y=0.60, size=8, text="Scan to verify")
 BADGE = dict(x=0.755, top=0.105, width=0.17, height=0.105)
 COURSE_BADGE_LABELS = {
-    "AIF": "AGENTIC AI",
+    "AI": "badges/AI Business Practitioner @2x.png",
     "MSO": "MICROSOFT OFFICE",
     "PYTHON": "PYTHON",
     "DA": "DATA ANALYTICS",
