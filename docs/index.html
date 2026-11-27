@@ -108,7 +108,7 @@ async function verify() {
         <div class="certificate-preview">
           <a href="${imageUrl}" target="_blank" rel="noopener" aria-label="Open full certificate image">
             <img class="certificate" src="${imageUrl}" alt="Team Academy certificate for ${esc(cert.student)}"
-              onerror="this.insertAdjacentHTML('afterend','<p class=\\\"image-error\\\">Certificate image is not available yet. Please check docs/img for this certificate.</p>');this.remove();">
+               onerror="this.parentElement.style.display='none';"
           </a>
         </div>
       </div>
