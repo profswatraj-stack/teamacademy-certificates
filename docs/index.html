@@ -1,46 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TeamAcademy Certificate Verification</title>
+  <meta name="description" content="Verify certificates issued by Team Academy.">
+  <title>Team Academy | Certificate Verification</title>
   <style>
-    body{font-family:sans-serif;max-width:900px;margin:40px auto;padding:0 16px}
-    input,button{padding:10px;font-size:16px}
-    .ok{background:#e6f7ea;border:1px solid #2e9e4f;padding:16px;border-radius:8px;margin-top:20px}
-    .bad{background:#fdeaea;border:1px solid #c0392b;padding:16px;border-radius:8px;margin-top:20px}
-    img{max-width:100%;margin-top:16px;border:1px solid #ccc;border-radius:8px}
+    :root{font-family:Inter,Arial,sans-serif;color:#172033;background:#f5f7fb}
+    *{box-sizing:border-box}
+    body{max-width:850px;margin:36px auto;padding:0 16px}
+    header,.panel{background:#fff;border:1px solid #e3e8ef;border-radius:14px;padding:22px;margin-bottom:16px}
+    header{text-align:center}
+    h1{margin:0 0 8px;font-size:27px;color:#173b67}
+    h2{font-size:19px;margin:0 0 14px}
+    .muted{color:#64748b;font-size:14px}
+    .search{display:flex;gap:8px;flex-wrap:wrap}
+    input,button{font:inherit;padding:12px;border-radius:8px}
+    input{flex:1;min-width:220px;border:1px solid #cbd5e1}
+    button{border:0;cursor:pointer;font-weight:650}
+    .verify{background:#173b67;color:#fff}
+    .ok{border:1px solid #9bd5ad;background:#f0fbf3;border-radius:10px;padding:16px}
+    .bad{border:1px solid #efb0b0;background:#fff4f4;border-radius:10px;padding:16px}
+    .status{font-weight:750;color:#18733a}
+    .details{display:grid;grid-template-columns:150px 1fr;gap:10px;margin:16px 0}
+    .details dt{color:#64748b}.details dd{margin:0;overflow-wrap:anywhere;font-weight:600}
+    .actions{display:flex;flex-direction:column;gap:12px;margin:16px 0}
+    .download{color:#172033;text-decoration:none;font-weight:700;display:flex;align-items:center;gap:10px;min-height:28px}
+    .download .pdf-icon{color:#ef4444;font-size:18px}
+    .linkedin{background:#0a66c2;color:#fff;text-decoration:none;padding:14px 16px;border-radius:8px;font-weight:700;display:flex;align-items:center;justify-content:center;width:100%;min-height:50px}
+    .public-url{background:#fff;border:1px solid #e1e7ef;border-radius:9px;padding:10px;margin-top:0}
+    .public-url-label{display:block;color:#64748b;font-size:12px;margin-bottom:4px}
+    .public-url a{color:#172033;font-size:13px;overflow-wrap:anywhere;text-decoration:underline}
+    .copy{background:#e9eef5;color:#173b67}
+    .certificate{width:100%;height:auto;border:1px solid #d8dee8;border-radius:8px;margin-top:12px}
+    footer{text-align:center;color:#64748b;font-size:13px;padding:12px}
+    @media(max-width:520px){.details{grid-template-columns:1fr;gap:4px}.details dd{margin-bottom:8px}.search{flex-direction:column}}
   </style>
+  <script src="config.js"></script>
 </head>
 <body>
-  <h2>TeamAcademy Certificate Verification</h2>
-  <input id="cid" placeholder="e.g. TA-2026-MSO-0001" size="28">
-  <button onclick="verify()">Verify</button>
-  <div id="result"></div>
+  <header>
+    <h1>Team Academy</h1>
+    <div class="muted">Official Certificate Verification</div>
+  </header>
+
+  <section class="panel">
+    <h2>Verify a certificate</h2>
+    <div class="search">
+      <input id="cid" aria-label="Certificate ID" placeholder="Enter certificate ID, e.g. TA-2026-MSO-0001">
+      <button class="verify" id="verifyButton" type="button">Verify certificate</button>
+    </div>
+    <div id="result" aria-live="polite"></div>
+  </section>
+
+  <footer>Issued by Team Academy · <a href="https://www.linkedin.com/company/team-academy-online" target="_blank" rel="noopener">Team Academy on LinkedIn</a></footer>
 
 <script>
-const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const formatDate = value => {
+  if (!value) return 'Not provided';
+  const date = new Date(value + 'T00:00:00');
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-IN',{day:'numeric',month:'long',year:'numeric'}).format(date);
+};
+
+async function copyText(value, button) {
+  try {
+    await navigator.clipboard.writeText(value);
+    const old = button.textContent;
+    button.textContent = 'Copied';
+    setTimeout(() => button.textContent = old, 1500);
+  } catch (_) {
+    window.prompt('Copy this information:', value);
+  }
+}
 
 async function verify() {
   const id = document.getElementById('cid').value.trim().toUpperCase();
   const out = document.getElementById('result');
+  if (!id) { out.innerHTML = '<p class="muted">Enter a certificate ID to continue.</p>'; return; }
+  out.innerHTML = '<p class="muted">Checking Team Academy records…</p>';
   try {
-    const res = await fetch('data/certificates.json?t=' + Date.now());
-    const list = await res.json();
-    const c = list.find(x => x.id === id);
-    out.innerHTML = c
-      ? `<div class="ok"><b>✔ Valid certificate</b><br>
-         Name: ${esc(c.student)}<br>Course: ${esc(c.course)}<br>
-         Issued: ${esc(c.issued)}<br>ID: ${esc(c.id)}</div>
-         <img src="img/${esc(c.id)}.jpg" alt="Certificate">
-         <p><a href="pdf/${esc(c.id)}.pdf" target="_blank">⬇ Download certificate (PDF)</a></p>`
-      : `<div class="bad"><b>✘ Not found.</b> This ID is not in our records.</div>`;
-  } catch (e) {
-    out.innerHTML = '<div class="bad">Could not load records.</div>';
+    const response = await fetch('data/certificates.json?t=' + Date.now(), {cache:'no-store'});
+    if (!response.ok) throw new Error('Registry request failed');
+    const records = await response.json();
+    const cert = records.find(item => String(item.id).toUpperCase() === id);
+    if (!cert) {
+      out.innerHTML = '<div class="bad"><b>Certificate not found</b><br>This ID does not appear in Team Academy records. Check the ID or contact Team Academy.</div>';
+      return;
+    }
+    if (cert.status && cert.status !== 'active') {
+      out.innerHTML = `<div class="bad"><b>Certificate is ${esc(cert.status)}</b><br>This certificate is not currently valid. Contact Team Academy for clarification.</div>`;
+      return;
+    }
+
+    const credentialUrl = cert.credential_url || (location.origin + location.pathname + '?id=' + encodeURIComponent(cert.id));
+    const courseName = cert.course || '';
+    const completed = cert.completed || cert.issued || '';
+    const linkedinUrl = window.TEAM_ACADEMY_LINKEDIN_ADD_URL || 'https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME';
+    const pdfUrl = 'pdf/' + encodeURIComponent(cert.id) + '.pdf';
+    const imageUrl = 'img/' + encodeURIComponent(cert.id) + '.jpg';
+
+    out.innerHTML = `
+      <div class="ok" style="margin-top:18px">
+        <div class="status">✓ Valid certificate · Active</div>
+        <dl class="details">
+          <dt>Student name</dt><dd>${esc(cert.student)}</dd>
+          <dt>Course</dt><dd>${esc(courseName)}</dd>
+          <dt>Completion date</dt><dd>${esc(formatDate(completed))}</dd>
+          <dt>Certificate ID</dt><dd>${esc(cert.id)}</dd>
+          <dt>Issue date</dt><dd>${esc(formatDate(cert.issued))}</dd>
+        </dl>
+        <div class="actions">
+          <a class="download" href="${pdfUrl}" target="_blank" rel="noopener"><span class="pdf-icon" aria-hidden="true">▣</span>Download certificate</a>
+          <a class="linkedin" href="${esc(linkedinUrl)}" target="_blank" rel="noopener">in&nbsp; Add to LinkedIn Profile</a>
+          <div class="public-url">
+            <span class="public-url-label">PUBLIC CREDENTIAL URL</span>
+            <a href="${esc(credentialUrl)}" target="_blank" rel="noopener">${esc(credentialUrl)} ↗</a>
+          </div>
+        </div>
+        <p class="muted">When LinkedIn opens, add the details below under Licenses &amp; Certifications. LinkedIn currently asks members to enter the information themselves.</p>
+        <div class="copybox"><b>Credential ID</b><br><code>${esc(cert.id)}</code> <button class="copy" id="copyId" type="button">Copy ID</button></div>
+        <p class="muted"><b>LinkedIn field guide</b><br>
+          Name: ${esc(courseName)}<br>
+          Issuing organization: Team Academy (select the official LinkedIn Page)<br>
+          Issue date: ${esc(formatDate(cert.issued))}<br>
+          Credential ID: ${esc(cert.id)}<br>
+          Credential URL: copy the URL above</p>
+      </div>
+      <img class="certificate" src="${imageUrl}" alt="Certificate preview for ${esc(cert.student)}" onerror="this.style.display='none'">
+    `;
+    document.getElementById('copyId').addEventListener('click', event => copyText(cert.id, event.currentTarget));
+  } catch (error) {
+    out.innerHTML = '<div class="bad"><b>Verification temporarily unavailable.</b><br>Team Academy records could not be loaded. Please try again later.</div>';
   }
 }
-const q = new URLSearchParams(location.search).get('id');
-if (q) { document.getElementById('cid').value = q; verify(); }
+
+document.getElementById('verifyButton').addEventListener('click', verify);
+document.getElementById('cid').addEventListener('keydown', event => { if (event.key === 'Enter') verify(); });
+const queryId = new URLSearchParams(location.search).get('id');
+if (queryId) { document.getElementById('cid').value = queryId; verify(); }
 </script>
 </body>
 </html>
